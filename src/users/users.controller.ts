@@ -56,8 +56,6 @@ export class UsersController {
         phone: { type: 'string', example: '0912345678' },
         email: { type: 'string', example: 'john@example.com' },
         password: { type: 'string', example: 'newpassword123' },
-        bio: { type: 'string', example: 'I work at Statefarm' },
-        image: { type: 'string', example: 'https://example.com/avatar.png' },
         avatar: { type: 'string', format: 'binary' },
       },
     },
