@@ -10,6 +10,10 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { MailModule } from './mail/mail.module';
+import { RoomsModule } from './rooms/rooms.module';
+import { BookingsModule } from './bookings/bookings.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -59,6 +63,10 @@ import { MailModule } from './mail/mail.module';
     AuthModule,
     AttachmentsModule,
     MailModule,
+    RoomsModule,
+    BookingsModule,
+    PaymentsModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

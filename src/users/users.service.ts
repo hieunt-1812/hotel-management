@@ -63,7 +63,7 @@ export class UsersService {
       throw new NotFoundException('Không tìm thấy người dùng');
     }
 
-    const { email, password, fullName, phone, bio, image } = updateUserDto;
+    const { email, password, fullName, phone } = updateUserDto;
 
     if (email && email !== user.email) {
       await this.ensureUniqueEmail(email, userId);
@@ -72,7 +72,6 @@ export class UsersService {
 
     if (fullName !== undefined) user.fullName = fullName;
     if (phone !== undefined) user.phone = phone;
-    if (bio !== undefined) user.bio = bio;
 
     if (avatar) {
       const attachment = await this.attachmentsService.createForEntity(
@@ -80,9 +79,7 @@ export class UsersService {
         user.id,
         avatar,
       );
-      user.image = attachment.url;
-    } else if (image !== undefined) {
-      user.image = image;
+      user.avatar = attachment.url;
     }
 
     if (password) {
