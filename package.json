@@ -25,7 +25,8 @@
     "migration:run": "npm run typeorm migration:run",
     "migration:revert": "npm run typeorm migration:revert",
     "migration:show": "npm run typeorm migration:show",
-    "migration:reset": "npm run typeorm schema:drop && npm run migration:run"
+    "migration:reset": "npm run typeorm schema:drop && npm run migration:run",
+    "seed": "ts-node -r tsconfig-paths/register src/database/seeds/seed.ts"
   },
   "dependencies": {
     "@nestjs/bull": "^12.0.0",

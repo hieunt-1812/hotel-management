@@ -29,7 +29,10 @@ npm install
 npm run build
 npm run migration:run
 
-# 5. Run the app
+# 5. Seed sample data (admin, user, room types, amenities, rooms)
+npm run seed
+
+# 6. Run the app
 npm run start:dev
 ```
 
@@ -48,6 +51,17 @@ npm run start:dev
 | `npm run migration:reset` | Drop the schema and re-run all migrations |
 
 The migration CLI reads the compiled output, so run `npm run build` before any migration command.
+
+## Seed data
+
+`npm run seed` runs a console script (Nest application context, no HTTP server) that inserts sample data. It is safe to run repeatedly — existing rows are skipped.
+
+| Account | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@hotel.local` (or `SEED_ADMIN_EMAIL`) | `Admin@123` (or `SEED_ADMIN_PASSWORD`) |
+| User | `user@hotel.local` | `User@123` |
+
+Also seeds 3 room types, 6 amenities and 5 rooms.
 
 ## Tests
 
