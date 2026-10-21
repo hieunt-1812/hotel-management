@@ -7,11 +7,8 @@ import {
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import {
-  Booking,
-  BookingStatus,
-  ROOM_BLOCKING_STATUSES,
-} from './entities/booking.entity';
+import { Booking, BookingStatus } from './entities/booking.entity';
+import { ROOM_BLOCKING_STATUSES } from './booking.constants';
 import { Room } from '../rooms/entities/room.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { MyBookingsQueryDto } from './dto/my-bookings-query.dto';
@@ -117,6 +114,7 @@ export class BookingsService {
   /** pending → cancelled, owner only. */
   async cancel(userId: string, id: string) {
     const booking = await this.bookingsRepository.findOne({
+      select: { id: true, status: true, user: { id: true } },
       where: { id },
       relations: { user: true },
     });

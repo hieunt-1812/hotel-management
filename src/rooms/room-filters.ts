@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { SelectQueryBuilder } from 'typeorm';
 import { Room } from './entities/room.entity';
-import { ROOM_BLOCKING_STATUSES } from '../bookings/entities/booking.entity';
+import { ROOM_BLOCKING_STATUSES } from '../bookings/booking.constants';
 import { RoomSort, SearchRoomsQueryDto } from './dto/search-rooms-query.dto';
 import { assertValidStay } from '../common/utils/stay-dates.util';
 
