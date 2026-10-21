@@ -3,8 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { Process, Processor } from '@nestjs/bull';
 import type { Job } from 'bull';
 import * as nodemailer from 'nodemailer';
-import { ActivationMailJob, MAIL_JOBS, MAIL_QUEUE } from './mail.constants';
+import {
+  ActivationMailJob,
+  BookingStatusMailJob,
+  MAIL_JOBS,
+  MAIL_QUEUE,
+} from './mail.constants';
 import { buildActivationMail } from './templates/activation-mail.template';
+import { buildBookingStatusMail } from './templates/booking-status-mail.template';
 
 /** Consumer side: delivers queued mails via Gmail SMTP (App Password). */
 @Processor(MAIL_QUEUE)
@@ -34,16 +40,27 @@ export class MailProcessor {
 
   @Process(MAIL_JOBS.ACTIVATION)
   async handleActivation(job: Job<ActivationMailJob>) {
-    await this.transporter.sendMail({
-      from: this.from,
-      to: job.data.to,
-      ...buildActivationMail(job.data),
-    });
-
+    await this.send(job.data.to, buildActivationMail(job.data));
     if (!this.smtpEnabled) {
       this.logger.log(
         `Activation link for ${job.data.to}: ${job.data.activationUrl}`,
       );
     }
+  }
+
+  @Process(MAIL_JOBS.BOOKING_STATUS)
+  async handleBookingStatus(job: Job<BookingStatusMailJob>) {
+    const mail = buildBookingStatusMail(job.data);
+    await this.send(job.data.to, mail);
+    if (!this.smtpEnabled) {
+      this.logger.log(`Booking mail to ${job.data.to}: ${mail.subject}`);
+    }
+  }
+
+  private send(
+    to: string,
+    mail: { subject: string; text: string; html: string },
+  ) {
+    return this.transporter.sendMail({ from: this.from, to, ...mail });
   }
 }

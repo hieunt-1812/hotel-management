@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -13,6 +12,7 @@ import { Room } from '../rooms/entities/room.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { MyBookingsQueryDto } from './dto/my-bookings-query.dto';
 import { serializeBooking } from './booking.serializer';
+import { buildBookingListQuery } from './booking-list-query';
 import { toPaginatedResult } from '../common/utils/paginate.util';
 import { assertValidStay, countNights } from '../common/utils/stay-dates.util';
 
@@ -76,22 +76,10 @@ export class BookingsService {
   }
 
   async findMine(userId: string, query: MyBookingsQueryDto) {
-    const { status, from, to, page, limit } = query;
-    if (from && to && from > to) {
-      throw new BadRequestException('from không được sau to');
-    }
-
-    const qb = this.bookingsRepository
-      .createQueryBuilder('booking')
-      .leftJoinAndSelect('booking.room', 'room')
-      .where('booking.user_id = :userId', { userId })
-      .orderBy('booking.createdAt', 'DESC')
-      .addOrderBy('booking.id', 'ASC')
-      .skip((page - 1) * limit)
-      .take(limit);
-    if (status) qb.andWhere('booking.status = :status', { status });
-    if (from) qb.andWhere('booking.checkIn >= :from', { from });
-    if (to) qb.andWhere('booking.checkIn <= :to', { to });
+    const { page, limit } = query;
+    const qb = buildBookingListQuery(this.bookingsRepository, query, {
+      ownerId: userId,
+    });
 
     const [bookings, total] = await qb.getManyAndCount();
     return toPaginatedResult(
