@@ -24,6 +24,12 @@ export enum BookingStatus {
   COMPLETED = 'completed',
 }
 
+/** Bookings in these states hold the room; rejected/cancelled ones free it. */
+export const ROOM_BLOCKING_STATUSES = [
+  BookingStatus.PENDING,
+  BookingStatus.APPROVED,
+];
+
 @Entity('bookings')
 // Speeds up the "room available?" overlap check on a room's date range
 @Index(['room', 'checkIn', 'checkOut'])
