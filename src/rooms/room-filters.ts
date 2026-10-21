@@ -1,14 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { SelectQueryBuilder } from 'typeorm';
 import { Room } from './entities/room.entity';
-import { BookingStatus } from '../bookings/entities/booking.entity';
+import { ROOM_BLOCKING_STATUSES } from '../bookings/booking.constants';
 import { RoomSort, SearchRoomsQueryDto } from './dto/search-rooms-query.dto';
-
-/** Bookings in these states hold the room; rejected/cancelled ones free it. */
-export const ROOM_BLOCKING_STATUSES = [
-  BookingStatus.PENDING,
-  BookingStatus.APPROVED,
-];
+import { assertValidStay } from '../common/utils/stay-dates.util';
 
 const SORT_COLUMNS: Record<RoomSort, [string, 'ASC' | 'DESC']> = {
   [RoomSort.NEWEST]: ['room.createdAt', 'DESC'],
@@ -16,23 +11,13 @@ const SORT_COLUMNS: Record<RoomSort, [string, 'ASC' | 'DESC']> = {
   [RoomSort.PRICE_DESC]: ['room.pricePerNight', 'DESC'],
 };
 
-/** Server-local date as YYYY-MM-DD. */
-const today = () => new Date().toLocaleDateString('sv-SE');
-
 /** Cross-field checks that class-validator can't express on a single property. */
 export function validateRoomSearch(query: SearchRoomsQueryDto) {
   const { checkIn, checkOut, minPrice, maxPrice } = query;
   if (!checkIn !== !checkOut) {
     throw new BadRequestException('Cần nhập cả checkIn và checkOut');
   }
-  if (checkIn && checkOut) {
-    if (checkIn < today()) {
-      throw new BadRequestException('checkIn không được ở quá khứ');
-    }
-    if (checkOut <= checkIn) {
-      throw new BadRequestException('checkOut phải sau checkIn');
-    }
-  }
+  if (checkIn && checkOut) assertValidStay(checkIn, checkOut);
   if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
     throw new BadRequestException('minPrice không được lớn hơn maxPrice');
   }

@@ -15,8 +15,7 @@ import {
 } from 'class-validator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { BedType, RoomView } from '../entities/room.entity';
-
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+import { DATE_ONLY_REGEX } from '../../common/utils/stay-dates.util';
 
 export enum RoomSort {
   NEWEST = 'newest',
@@ -30,7 +29,7 @@ export class SearchRoomsQueryDto extends PaginationQueryDto {
     description: 'Ngày nhận phòng (YYYY-MM-DD), dùng cùng checkOut',
   })
   @IsOptional()
-  @Matches(DATE_ONLY, { message: 'checkIn phải có dạng YYYY-MM-DD' })
+  @Matches(DATE_ONLY_REGEX, { message: 'checkIn phải có dạng YYYY-MM-DD' })
   @IsDateString({ strict: true })
   checkIn?: string;
 
@@ -39,7 +38,7 @@ export class SearchRoomsQueryDto extends PaginationQueryDto {
     description: 'Ngày trả phòng (YYYY-MM-DD), phải sau checkIn',
   })
   @IsOptional()
-  @Matches(DATE_ONLY, { message: 'checkOut phải có dạng YYYY-MM-DD' })
+  @Matches(DATE_ONLY_REGEX, { message: 'checkOut phải có dạng YYYY-MM-DD' })
   @IsDateString({ strict: true })
   checkOut?: string;
 
