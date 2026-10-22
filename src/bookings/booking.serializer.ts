@@ -23,3 +23,19 @@ export function serializeBooking(booking: Booking) {
       : null,
   };
 }
+
+/** Booking shape for admins: adds who booked it. */
+export function serializeAdminBooking(booking: Booking) {
+  const { user } = booking;
+  return {
+    ...serializeBooking(booking),
+    user: user
+      ? {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          phone: user.phone,
+        }
+      : null,
+  };
+}

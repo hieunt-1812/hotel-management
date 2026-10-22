@@ -1,13 +1,5 @@
 import { ActivationMailJob } from '../mail.constants';
-
-const escapeHtml = (value: string) =>
-  value.replace(
-    /[&<>"']/g,
-    (char) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[
-        char
-      ] as string,
-  );
+import { escapeHtml } from './escape-html.util';
 
 export function buildActivationMail(job: ActivationMailJob) {
   const name = escapeHtml(job.fullName);
