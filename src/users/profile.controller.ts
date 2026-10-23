@@ -21,7 +21,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { avatarMulterOptions } from '../attachments/multer.config';
+import { imageUploadOptions } from '../attachments/multer.config';
 import { DeleteUploadsOnErrorInterceptor } from '../attachments/interceptors/delete-uploads-on-error.interceptor';
 
 @ApiTags('Profile')
@@ -41,7 +41,7 @@ export class ProfileController {
 
   @Patch()
   @UseInterceptors(
-    FileInterceptor('avatar', avatarMulterOptions),
+    FileInterceptor('avatar', imageUploadOptions),
     DeleteUploadsOnErrorInterceptor,
   )
   @ApiConsumes('multipart/form-data')

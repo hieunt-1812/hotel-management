@@ -8,14 +8,17 @@ import { ReviewsModule } from '../reviews/reviews.module';
 import { RoomsService } from './rooms.service';
 import { RoomsController } from './rooms.controller';
 import { RoomCatalogController } from './room-catalog.controller';
+import { AdminRoomsController } from './admin-rooms.controller';
+import { AdminRoomsService } from './admin-rooms.service';
+import { AdminRoomImagesService } from './admin-room-images.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Room, RoomType, RoomImage, Amenity]),
     ReviewsModule,
   ],
-  controllers: [RoomsController, RoomCatalogController],
-  providers: [RoomsService],
+  controllers: [RoomsController, RoomCatalogController, AdminRoomsController],
+  providers: [RoomsService, AdminRoomsService, AdminRoomImagesService],
   exports: [TypeOrmModule],
 })
 export class RoomsModule {}
