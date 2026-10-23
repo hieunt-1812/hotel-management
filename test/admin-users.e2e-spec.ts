@@ -136,7 +136,7 @@ describe('Admin users (e2e)', () => {
         .send({ email: user.email, password: user.password })
         .expect(403);
       await api()
-        .get('/api/user')
+        .get('/api/me')
         .set('Authorization', `Bearer ${user.token}`)
         .expect(401);
     });

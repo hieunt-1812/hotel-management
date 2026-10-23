@@ -1,13 +1,15 @@
 import {
+  BadRequestException,
   Injectable,
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, QueryFailedError, Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { AttachmentsService } from '../attachments/attachments.service';
 import * as bcrypt from 'bcrypt';
 
@@ -53,28 +55,18 @@ export class UsersService {
     }
   }
 
-  async update(
+  async updateProfile(
     userId: string,
-    updateUserDto: UpdateUserDto,
+    { fullName, phone }: UpdateProfileDto,
     avatar?: Express.Multer.File,
-  ) {
+  ): Promise<SafeUser> {
     const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
-    }
-
-    const { email, password, fullName, phone } = updateUserDto;
-
-    if (email && email !== user.email) {
-      await this.ensureUniqueEmail(email, userId);
-      user.email = email;
-    }
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
     if (fullName !== undefined) user.fullName = fullName;
     if (phone !== undefined) user.phone = phone;
-
     if (avatar) {
-      const attachment = await this.attachmentsService.createForEntity(
+      const attachment = await this.attachmentsService.replaceForEntity(
         'user',
         user.id,
         avatar,
@@ -82,12 +74,31 @@ export class UsersService {
       user.avatar = attachment.url;
     }
 
-    if (password) {
-      user.password = await this.hashPassword(password);
+    return this.toSafeUser(await this.usersRepository.save(user));
+  }
+
+  async changePassword(
+    userId: string,
+    { currentPassword, newPassword }: ChangePasswordDto,
+  ) {
+    const user = await this.usersRepository.findOne({
+      select: { id: true, password: true },
+      where: { id: userId },
+    });
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    // 400 (not 401): a wrong current password must not look like an expired session
+    if (!(await bcrypt.compare(currentPassword, user.password))) {
+      throw new BadRequestException('Mật khẩu hiện tại không đúng');
+    }
+    if (currentPassword === newPassword) {
+      throw new BadRequestException('Mật khẩu mới phải khác mật khẩu hiện tại');
     }
 
-    const savedUser = await this.usersRepository.save(user);
-    return { user: this.toSafeUser(savedUser) };
+    await this.usersRepository.update(user.id, {
+      password: await this.hashPassword(newPassword),
+    });
+    return { message: 'Đổi mật khẩu thành công' };
   }
 
   /** Marks the user as activated. Idempotent: keeps the first activation time. */
@@ -119,14 +130,5 @@ export class UsersService {
   private async hashPassword(password: string): Promise<string> {
     const salt = await bcrypt.genSalt(10);
     return bcrypt.hash(password, salt);
-  }
-
-  private async ensureUniqueEmail(email: string, excludeUserId: string) {
-    const conflict = await this.usersRepository.findOne({
-      where: { email, id: Not(excludeUserId) },
-    });
-    if (conflict) {
-      throw new ConflictException(EMAIL_EXISTS_MESSAGE);
-    }
   }
 }
