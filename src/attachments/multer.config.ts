@@ -9,7 +9,11 @@ export const UPLOAD_DIR = './public/uploads';
 const ALLOWED_IMAGE_MIME = /^image\/(jpg|jpeg|png|gif|webp)$/;
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
-export const avatarMulterOptions: MulterOptions = {
+/** Max files per multi-image upload request. */
+export const MAX_IMAGES_PER_UPLOAD = 10;
+
+/** Images only (jpg, jpeg, png, gif, webp), max 2MB each, random file names. */
+export const imageUploadOptions: MulterOptions = {
   storage: diskStorage({
     destination: UPLOAD_DIR,
     filename: (_req, file, cb) => {

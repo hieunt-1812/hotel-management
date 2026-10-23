@@ -1,34 +1,31 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { existsSync, readdirSync, unlinkSync } from 'fs';
-import { basename, join } from 'path';
 import { DataSource } from 'typeorm';
 import { createTestApp } from './utils/test-app.factory';
 import { truncateDatabase } from './utils/database.helper';
 import { createUser, SeededUser } from './utils/seed.helper';
-import { UPLOAD_DIR } from '../src/attachments/multer.config';
+import {
+  PNG,
+  smallImage,
+  trackUploads,
+  uploadExists,
+  waitForCleanup,
+} from './utils/uploads.helper';
 import { Attachment } from '../src/attachments/entities/attachment.entity';
-
-const PNG = { filename: 'avatar.png', contentType: 'image/png' };
-const smallImage = Buffer.from('fake-png-bytes');
-const listUploads = () =>
-  readdirSync(UPLOAD_DIR).filter((f) => !f.startsWith('.'));
 
 describe('Me / profile (e2e)', () => {
   let app: INestApplication;
   let user: SeededUser;
-  let uploadsBefore: Set<string>;
+  let uploads: ReturnType<typeof trackUploads>;
 
   const api = () => request(app.getHttpServer());
   const authed = (req: request.Test) =>
     req.set('Authorization', `Bearer ${user.token}`);
   const patchMe = () => authed(api().patch('/api/me'));
-  /** Files written to the upload dir by this suite. */
-  const newUploads = () => listUploads().filter((f) => !uploadsBefore.has(f));
 
   beforeAll(async () => {
     app = await createTestApp();
-    uploadsBefore = new Set(listUploads());
+    uploads = trackUploads();
   });
 
   beforeEach(async () => {
@@ -40,7 +37,7 @@ describe('Me / profile (e2e)', () => {
   });
 
   afterAll(async () => {
-    newUploads().forEach((f) => unlinkSync(join(UPLOAD_DIR, f)));
+    uploads.cleanup();
     await app.close();
   });
 
@@ -78,17 +75,15 @@ describe('Me / profile (e2e)', () => {
       const first = await patchMe()
         .attach('avatar', smallImage, PNG)
         .expect(200);
-      const firstFile = basename(first.body.avatar);
       expect(first.body.avatar).toMatch(/\/uploads\/.+\.png$/);
-      expect(existsSync(join(UPLOAD_DIR, firstFile))).toBe(true);
+      expect(uploadExists(first.body.avatar)).toBe(true);
 
       const second = await patchMe()
         .attach('avatar', smallImage, PNG)
         .expect(200);
-      const secondFile = basename(second.body.avatar);
-      expect(secondFile).not.toBe(firstFile);
-      expect(existsSync(join(UPLOAD_DIR, firstFile))).toBe(false);
-      expect(existsSync(join(UPLOAD_DIR, secondFile))).toBe(true);
+      expect(second.body.avatar).not.toBe(first.body.avatar);
+      expect(uploadExists(first.body.avatar)).toBe(false);
+      expect(uploadExists(second.body.avatar)).toBe(true);
 
       const rows = await app.get(DataSource).getRepository(Attachment).countBy({
         entityType: 'user',
@@ -98,14 +93,13 @@ describe('Me / profile (e2e)', () => {
     });
 
     it('deletes the uploaded file when validation fails', async () => {
-      const before = newUploads().length;
+      const before = uploads.newFiles().length;
       await patchMe()
         .field('phone', 'not-a-phone')
         .attach('avatar', smallImage, PNG)
         .expect(400);
-      // cleanup is async (best effort) — give it a moment
-      await new Promise((r) => setTimeout(r, 100));
-      expect(newUploads()).toHaveLength(before);
+      await waitForCleanup();
+      expect(uploads.newFiles()).toHaveLength(before);
     });
 
     it('rejects non-image files (400) and files over 2MB (413)', async () => {
