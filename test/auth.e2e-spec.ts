@@ -162,7 +162,7 @@ describe('Auth (e2e)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
       await request(server)
-        .get('/api/user')
+        .get('/api/me')
         .set('Authorization', `Bearer ${token}`)
         .expect(401);
     });
