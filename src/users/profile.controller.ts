@@ -24,13 +24,12 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { avatarMulterOptions } from '../attachments/multer.config';
 import { DeleteUploadsOnErrorInterceptor } from '../attachments/interceptors/delete-uploads-on-error.interceptor';
 
-/** Profile of the logged-in user. */
-@ApiTags('Me')
+@ApiTags('Profile')
 @ApiBearerAuth()
 @ApiResponse({ status: 401, description: 'Chưa đăng nhập.' })
 @Controller('me')
 @UseGuards(AuthGuard('jwt'))
-export class MeController {
+export class ProfileController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
