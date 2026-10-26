@@ -29,3 +29,13 @@ export function serializeReview(review: Review) {
     reviewer: review.booking?.user?.fullName ?? null,
   };
 }
+
+/** Admin room shape: image ids (needed to delete images) and timestamps. */
+export function serializeAdminRoom(room: Room) {
+  return {
+    ...serializeRoom(room),
+    images: (room.images ?? []).map(({ id, url }) => ({ id, url })),
+    createdAt: room.createdAt,
+    updatedAt: room.updatedAt,
+  };
+}

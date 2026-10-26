@@ -20,8 +20,10 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('Medium Clone API')
-    .setDescription('Tài liệu API hệ thống Medium Clone')
+    .setTitle('Hotel Management API')
+    .setDescription(
+      'Tài liệu API hệ thống quản lý khách sạn (Hotel Management System)',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();
