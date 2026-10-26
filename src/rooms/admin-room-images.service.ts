@@ -1,11 +1,12 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Room } from './entities/room.entity';
 import { RoomImage } from './entities/room-image.entity';
 import {
@@ -16,13 +17,13 @@ import {
 @Injectable()
 export class AdminRoomImagesService {
   constructor(
+    @InjectDataSource() private readonly dataSource: DataSource,
     @InjectRepository(Room) private readonly roomsRepository: Repository<Room>,
     @InjectRepository(RoomImage)
     private readonly imagesRepository: Repository<RoomImage>,
     private readonly configService: ConfigService,
   ) {}
 
-  /** Files are already on disk (multer); on any error the upload interceptor removes them. */
   async add(roomId: string, files: Express.Multer.File[] = []) {
     if (!files.length) {
       throw new BadRequestException('Cần chọn ít nhất 1 ảnh (field "images")');
@@ -44,14 +45,25 @@ export class AdminRoomImagesService {
 
   async remove(roomId: string, imageId: string) {
     await this.ensureRoomExists(roomId);
-    const image = await this.imagesRepository.findOne({
-      select: { id: true, url: true },
-      where: { id: imageId, room: { id: roomId } },
-    });
-    if (!image) throw new NotFoundException('Không tìm thấy ảnh của phòng này');
 
-    await this.imagesRepository.delete(image.id);
-    await deleteUploadedFile(image.url);
+    await this.dataSource.transaction(async (manager) => {
+      const image = await manager.findOne(RoomImage, {
+        select: { id: true, url: true },
+        where: { id: imageId, room: { id: roomId } },
+      });
+      if (!image) {
+        throw new NotFoundException('Không tìm thấy ảnh của phòng này');
+      }
+
+      await manager.delete(RoomImage, image.id);
+      try {
+        await deleteUploadedFile(image.url, { strict: true });
+      } catch {
+        throw new InternalServerErrorException(
+          'Không xoá được file ảnh, vui lòng thử lại',
+        );
+      }
+    });
     return { message: 'Đã xoá ảnh' };
   }
 

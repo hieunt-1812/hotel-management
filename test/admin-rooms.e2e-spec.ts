@@ -1,5 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { mkdirSync, rmdirSync } from 'fs';
+import { join } from 'path';
 import { createTestApp } from './utils/test-app.factory';
 import { truncateDatabase } from './utils/database.helper';
 import { createUser, SeededUser } from './utils/seed.helper';
@@ -16,6 +18,8 @@ import {
   waitForCleanup,
 } from './utils/uploads.helper';
 import { Room } from '../src/rooms/entities/room.entity';
+import { RoomImage } from '../src/rooms/entities/room-image.entity';
+import { UPLOAD_DIR } from '../src/attachments/multer.config';
 import { Amenity } from '../src/rooms/entities/amenity.entity';
 import { BookingStatus } from '../src/bookings/entities/booking.entity';
 import { UserRole } from '../src/users/entities/user.entity';
@@ -274,6 +278,40 @@ describe('Admin rooms (e2e)', () => {
       await asAdmin(
         api().delete(`/api/admin/rooms/${catalog.mid.id}/images/${other.id}`),
       ).expect(404);
+    });
+
+    it('still deletes the row when the file is already missing', async () => {
+      const image = await catalog.ds.getRepository(RoomImage).save({
+        url: '/uploads/already-gone.png',
+        room: catalog.mid,
+      });
+
+      await asAdmin(
+        api().delete(`/api/admin/rooms/${catalog.mid.id}/images/${image.id}`),
+      ).expect(200);
+      expect(
+        await catalog.ds.getRepository(RoomImage).existsBy({ id: image.id }),
+      ).toBe(false);
+    });
+
+    it('keeps the row (rollback) and returns 500 when the file cannot be deleted', async () => {
+      const fileName = 'cannot-delete.png';
+      mkdirSync(join(UPLOAD_DIR, fileName));
+      try {
+        const image = await catalog.ds.getRepository(RoomImage).save({
+          url: `/uploads/${fileName}`,
+          room: catalog.mid,
+        });
+
+        await asAdmin(
+          api().delete(`/api/admin/rooms/${catalog.mid.id}/images/${image.id}`),
+        ).expect(500);
+        expect(
+          await catalog.ds.getRepository(RoomImage).existsBy({ id: image.id }),
+        ).toBe(true);
+      } finally {
+        rmdirSync(join(UPLOAD_DIR, fileName));
+      }
     });
 
     it('leaves no files behind when the request fails', async () => {
