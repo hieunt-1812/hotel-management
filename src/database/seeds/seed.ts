@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { AppModule } from '../../app.module';
 import { seedUsers } from './users.seeder';
 import { seedRooms } from './rooms.seeder';
+import { seedBookings } from './bookings.seeder';
 
 /**
  * Console seeder: `npm run seed`. Boots the Nest app context (no HTTP server)
@@ -20,6 +21,7 @@ async function bootstrap() {
     await app.get(DataSource).transaction(async (manager) => {
       console.log(`Users created: ${await seedUsers(manager, config)}`);
       console.log(`Rooms created: ${await seedRooms(manager)}`);
+      console.log(`Bookings created: ${await seedBookings(manager)}`);
     });
     console.log('Seeding completed');
   } catch (error) {

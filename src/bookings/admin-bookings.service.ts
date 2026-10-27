@@ -12,6 +12,7 @@ import { buildBookingListQuery } from './booking-list-query';
 import { serializeAdminBooking } from './booking.serializer';
 import { toPaginatedResult } from '../common/utils/paginate.util';
 import { MailService } from '../mail/mail.service';
+import { BookingCompletionService } from './booking-completion.service';
 
 type Decision = BookingStatus.APPROVED | BookingStatus.REJECTED;
 
@@ -24,6 +25,7 @@ export class AdminBookingsService {
     @InjectRepository(Booking)
     private readonly bookingsRepository: Repository<Booking>,
     private readonly mailService: MailService,
+    private readonly completionService: BookingCompletionService,
   ) {}
 
   async findAll(query: AdminListBookingsQueryDto) {
@@ -49,6 +51,11 @@ export class AdminBookingsService {
 
   reject(id: string, reason: string) {
     return this.decide(id, BookingStatus.REJECTED, reason);
+  }
+
+  async complete(id: string) {
+    await this.completionService.completeOne(id);
+    return serializeAdminBooking(await this.loadWithRelations(id));
   }
 
   /** State machine: only pending → approved | rejected. Then notify the guest. */

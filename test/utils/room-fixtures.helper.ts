@@ -70,6 +70,7 @@ export function createBooking(
     checkIn: string;
     checkOut: string;
     status?: BookingStatus;
+    totalPrice?: number;
   },
 ) {
   return ds.getRepository(Booking).save({ totalPrice: 0, ...data });
