@@ -53,6 +53,20 @@ export class AdminBookingsController {
     return this.adminBookingsService.approve(id);
   }
 
+  @Patch(':id/complete')
+  @ApiOperation({
+    summary: 'Hoàn tất booking đã duyệt và đã qua ngày trả phòng',
+  })
+  @ApiResponse({ status: 400, description: 'Chưa tới ngày trả phòng.' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy booking.' })
+  @ApiResponse({
+    status: 409,
+    description: 'Booking không ở trạng thái approved.',
+  })
+  complete(@Param('id', ParseUUIDPipe) id: string) {
+    return this.adminBookingsService.complete(id);
+  }
+
   @Patch(':id/reject')
   @ApiOperation({ summary: 'Từ chối booking, bắt buộc có lý do (gửi mail)' })
   @ApiResponse({ status: 400, description: 'Thiếu lý do từ chối.' })
