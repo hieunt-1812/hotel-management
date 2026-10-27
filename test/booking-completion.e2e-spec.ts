@@ -14,10 +14,11 @@ import {
   BookingStatus,
 } from '../src/bookings/entities/booking.entity';
 import { UserRole } from '../src/users/entities/user.entity';
+import { BookingCompletionCron } from '../src/bookings/booking-completion.cron';
 import {
+  BOOKING_COMPLETION_DEFAULT_CRON,
   BOOKING_COMPLETION_JOB,
-  BookingCompletionCron,
-} from '../src/bookings/booking-completion.cron';
+} from '../src/bookings/booking.constants';
 
 describe('Booking completion (e2e)', () => {
   let app: INestApplication;
@@ -60,7 +61,7 @@ describe('Booking completion (e2e)', () => {
   describe('cron job', () => {
     it('is registered with the default nightly schedule', () => {
       const job = app.get(SchedulerRegistry).getCronJob(BOOKING_COMPLETION_JOB);
-      expect(job.cronTime.source).toBe('0 1 * * *');
+      expect(job.cronTime.source).toBe(BOOKING_COMPLETION_DEFAULT_CRON);
       expect(job.isActive).toBe(true);
     });
 

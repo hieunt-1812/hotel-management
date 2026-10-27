@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { BookingCompletionService } from './booking-completion.service';
-
-export const BOOKING_COMPLETION_JOB = 'complete-finished-bookings';
-const DEFAULT_SCHEDULE = '0 1 * * *';
+import {
+  BOOKING_COMPLETION_DEFAULT_CRON,
+  BOOKING_COMPLETION_JOB,
+} from './booking.constants';
 
 @Injectable()
 export class BookingCompletionCron implements OnModuleInit {
@@ -20,7 +21,7 @@ export class BookingCompletionCron implements OnModuleInit {
   onModuleInit() {
     const schedule =
       this.configService.get<string>('BOOKING_COMPLETION_CRON') ||
-      DEFAULT_SCHEDULE;
+      BOOKING_COMPLETION_DEFAULT_CRON;
     const job = new CronJob(schedule, () => this.run());
     this.schedulerRegistry.addCronJob(BOOKING_COMPLETION_JOB, job);
     job.start();
