@@ -8,37 +8,29 @@ import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
 import { ActivationTokenService } from './activation-token.service';
 import { MailModule } from '../mail/mail.module';
-import { Redis } from 'ioredis';
+import { RefreshTokenModule } from './refresh-token.module';
+import { DEFAULT_ACCESS_TOKEN_TTL_SECONDS } from './auth.constants';
 
 @Module({
   imports: [
     UsersModule,
     MailModule,
+    RefreshTokenModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '1d' },
+        signOptions: {
+          expiresIn:
+            Number(configService.get('JWT_ACCESS_TOKEN_TTL_SECONDS')) ||
+            DEFAULT_ACCESS_TOKEN_TTL_SECONDS,
+        },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JwtStrategy,
-    ActivationTokenService,
-    {
-      provide: 'REDIS_CLIENT',
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        return new Redis({
-          host: configService.get<string>('REDIS_HOST') || 'localhost',
-          port: configService.get<number>('REDIS_PORT') || 6379,
-        });
-      },
-    },
-  ],
+  providers: [AuthService, JwtStrategy, ActivationTokenService],
 })
 export class AuthModule {}

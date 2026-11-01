@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import { ActivationTokenService } from './activation-token.service';
+import { RefreshTokenService } from './refresh-token.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -17,6 +18,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: {} },
         { provide: MailService, useValue: {} },
         { provide: ActivationTokenService, useValue: {} },
+        { provide: RefreshTokenService, useValue: {} },
         { provide: ConfigService, useValue: {} },
         { provide: 'REDIS_CLIENT', useValue: {} },
       ],

@@ -19,6 +19,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ActivateAccountDto } from './dto/activate-account.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @ApiTags('Auth')
@@ -54,7 +56,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Đăng nhập' })
   @ApiResponse({
     status: 200,
-    description: 'Đăng nhập thành công, trả về Token.',
+    description:
+      'Đăng nhập thành công, trả về access token (30 phút) và refresh token (7 ngày).',
   })
   @ApiResponse({ status: 401, description: 'Sai email hoặc mật khẩu.' })
   @ApiResponse({
@@ -65,13 +68,30 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Cấp lại access token và refresh token mới bằng refresh token',
+  })
+  @ApiResponse({ status: 200, description: 'Trả về cặp token mới.' })
+  @ApiResponse({
+    status: 401,
+    description:
+      'Refresh token không hợp lệ, đã hết hạn, đã bị thu hồi hoặc bị dùng lại.',
+  })
+  refresh(@Body() { refreshToken }: RefreshTokenDto) {
+    return this.authService.refresh(refreshToken);
+  }
+
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Đăng xuất' })
+  @ApiOperation({
+    summary: 'Đăng xuất, thu hồi access token và refresh token gửi kèm',
+  })
   @ApiResponse({ status: 200, description: 'Đăng xuất thành công.' })
-  logout(@Request() req: any) {
-    return this.authService.logout(req);
+  logout(@Request() req: any, @Body() { refreshToken }: LogoutDto) {
+    return this.authService.logout(req, refreshToken);
   }
 }

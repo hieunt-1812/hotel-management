@@ -139,6 +139,10 @@ describe('Admin users (e2e)', () => {
         .get('/api/me')
         .set('Authorization', `Bearer ${user.token}`)
         .expect(401);
+      await api()
+        .post('/api/auth/refresh')
+        .send({ refreshToken: user.refreshToken })
+        .expect(401);
     });
 
     it('unlocks a user', async () => {

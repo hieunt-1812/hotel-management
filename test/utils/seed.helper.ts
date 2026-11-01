@@ -6,6 +6,7 @@ import { User, UserRole } from '../../src/users/entities/user.entity';
 export interface SeededUser {
   id: string;
   token: string;
+  refreshToken: string;
   email: string;
   password: string;
   fullName: string;
@@ -48,6 +49,7 @@ export async function createUser(
   return {
     id: loginRes.body.user.id,
     token: loginRes.body.user.token,
+    refreshToken: loginRes.body.user.refreshToken,
     email,
     password,
     fullName,

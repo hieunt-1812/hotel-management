@@ -11,6 +11,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { AttachmentsService } from '../attachments/attachments.service';
+import { RefreshTokenService } from '../auth/refresh-token.service';
 import * as bcrypt from 'bcrypt';
 
 const PG_UNIQUE_VIOLATION = '23505';
@@ -24,6 +25,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly attachmentsService: AttachmentsService,
+    private readonly refreshTokenService: RefreshTokenService,
   ) {}
 
   /** Creates a not-yet-activated user. */
@@ -98,6 +100,7 @@ export class UsersService {
     await this.usersRepository.update(user.id, {
       password: await this.hashPassword(newPassword),
     });
+    await this.refreshTokenService.revokeAll(user.id);
     return { message: 'Đổi mật khẩu thành công' };
   }
 

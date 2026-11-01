@@ -139,6 +139,18 @@ describe('Me / profile (e2e)', () => {
       await login(user.password).expect(401);
     });
 
+    it('revokes existing refresh tokens after a password change', async () => {
+      await changePassword({
+        currentPassword: user.password,
+        newPassword: 'brandNew123',
+      }).expect(200);
+
+      await api()
+        .post('/api/auth/refresh')
+        .send({ refreshToken: user.refreshToken })
+        .expect(401);
+    });
+
     it.each([
       [
         'wrong current password',

@@ -9,6 +9,7 @@ import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { AdminListUsersQueryDto } from './dto/admin-list-users-query.dto';
 import { toPaginatedResult } from '../common/utils/paginate.util';
+import { RefreshTokenService } from '../auth/refresh-token.service';
 
 @Injectable()
 export class AdminUsersService {
@@ -16,6 +17,7 @@ export class AdminUsersService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly usersService: UsersService,
+    private readonly refreshTokenService: RefreshTokenService,
   ) {}
 
   async findAll({
@@ -65,7 +67,9 @@ export class AdminUsersService {
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
     user.isActive = isActive;
-    return this.usersService.toSafeUser(await this.usersRepository.save(user));
+    const savedUser = await this.usersRepository.save(user);
+    if (!isActive) await this.refreshTokenService.revokeAll(user.id);
+    return this.usersService.toSafeUser(savedUser);
   }
 
   /** Treat user-typed % and _ literally inside ILIKE. */

@@ -15,6 +15,7 @@ import { RoomsModule } from './rooms/rooms.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { ReviewsModule } from './reviews/reviews.module';
         },
       }),
     }),
+    RedisModule,
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {

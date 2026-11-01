@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import { ActivationTokenService } from './activation-token.service';
+import { RefreshTokenService } from './refresh-token.service';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -25,6 +26,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
     private readonly activationTokenService: ActivationTokenService,
+    private readonly refreshTokenService: RefreshTokenService,
     private readonly configService: ConfigService,
     @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
   ) {}
@@ -85,13 +87,25 @@ export class AuthService {
       throw new ForbiddenException('Tài khoản chưa được kích hoạt');
     if (!user.isActive) throw new ForbiddenException('Tài khoản đã bị khoá');
 
-    const payload = { email: user.email, sub: user.id };
-    const token = this.jwtService.sign(payload);
-
-    return { user: { ...this.usersService.toSafeUser(user), token } };
+    const tokens = await this.issueTokens(user.id, user.email);
+    return { user: { ...this.usersService.toSafeUser(user), ...tokens } };
   }
 
-  async logout(req: any) {
+  async refresh(refreshToken: string) {
+    const userId = await this.refreshTokenService.consume(refreshToken);
+    const user = await this.usersService.findById(userId);
+    if (!user?.activatedAt || !user.isActive) {
+      await this.refreshTokenService.revokeAll(userId);
+      throw new UnauthorizedException('Tài khoản không còn hoạt động');
+    }
+    return this.issueTokens(user.id, user.email);
+  }
+
+  async logout(req: any, refreshToken?: string) {
+    if (refreshToken) {
+      await this.refreshTokenService.revoke(refreshToken, req.user.id);
+    }
+
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return { message: 'Không tìm thấy token' };
@@ -112,5 +126,11 @@ export class AuthService {
       }
     }
     return { message: 'Đăng xuất thành công' };
+  }
+
+  private async issueTokens(userId: string, email: string) {
+    const token = this.jwtService.sign({ email, sub: userId });
+    const refreshToken = await this.refreshTokenService.issue(userId);
+    return { token, refreshToken };
   }
 }

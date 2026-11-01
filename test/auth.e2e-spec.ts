@@ -1,4 +1,5 @@
 import { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { createTestApp } from './utils/test-app.factory';
@@ -133,7 +134,14 @@ describe('Auth (e2e)', () => {
 
       const res = await login().expect(200);
       expect(res.body.user.token).toEqual(expect.any(String));
+      expect(res.body.user.refreshToken).toEqual(expect.any(String));
       expect(res.body.user.password).toBeUndefined();
+    });
+
+    it('issues an access token that expires after 30 minutes', async () => {
+      const { token } = await createUser(app);
+      const { iat, exp } = app.get(JwtService).decode(token);
+      expect(exp - iat).toBe(30 * 60);
     });
 
     it('rejects a locked account with 403', async () => {
@@ -152,6 +160,48 @@ describe('Auth (e2e)', () => {
     });
   });
 
+  describe('POST /api/auth/refresh', () => {
+    const refresh = (refreshToken: unknown) =>
+      request(app.getHttpServer())
+        .post('/api/auth/refresh')
+        .send({ refreshToken });
+
+    it('returns a new working token pair and rotates the refresh token', async () => {
+      const user = await createUser(app);
+
+      const res = await refresh(user.refreshToken).expect(200);
+      expect(res.body.token).toEqual(expect.any(String));
+      expect(res.body.refreshToken).toEqual(expect.any(String));
+      expect(res.body.refreshToken).not.toBe(user.refreshToken);
+
+      const me = await request(app.getHttpServer())
+        .get('/api/me')
+        .set('Authorization', `Bearer ${res.body.token}`)
+        .expect(200);
+      expect(me.body.id).toBe(user.id);
+    });
+
+    it('revokes every session when a used refresh token is replayed', async () => {
+      const user = await createUser(app);
+      const rotated = await refresh(user.refreshToken).expect(200);
+
+      await refresh(user.refreshToken).expect(401);
+      await refresh(rotated.body.refreshToken).expect(401);
+    });
+
+    it('returns 401 for an unknown refresh token', async () => {
+      await refresh('not-a-real-token').expect(401);
+    });
+
+    it.each([
+      ['missing', undefined],
+      ['empty', ''],
+      ['not a string', 123],
+    ])('returns 400 when the refresh token is %s', async (_, value) => {
+      await refresh(value).expect(400);
+    });
+  });
+
   describe('POST /api/auth/logout', () => {
     it('blacklists the token', async () => {
       const { token } = await createUser(app);
@@ -165,6 +215,37 @@ describe('Auth (e2e)', () => {
         .get('/api/me')
         .set('Authorization', `Bearer ${token}`)
         .expect(401);
+    });
+
+    it('revokes the given refresh token', async () => {
+      const { token, refreshToken } = await createUser(app);
+      const server = app.getHttpServer();
+
+      await request(server)
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ refreshToken })
+        .expect(200);
+      await request(server)
+        .post('/api/auth/refresh')
+        .send({ refreshToken })
+        .expect(401);
+    });
+
+    it("does not revoke another user's refresh token", async () => {
+      const alice = await createUser(app, { email: 'alice@example.com' });
+      const bob = await createUser(app, { email: 'bob@example.com' });
+      const server = app.getHttpServer();
+
+      await request(server)
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${alice.token}`)
+        .send({ refreshToken: bob.refreshToken })
+        .expect(200);
+      await request(server)
+        .post('/api/auth/refresh')
+        .send({ refreshToken: bob.refreshToken })
+        .expect(200);
     });
   });
 });
