@@ -138,10 +138,10 @@ describe('Auth (e2e)', () => {
       expect(res.body.user.password).toBeUndefined();
     });
 
-    it('issues an access token that expires after 30 minutes', async () => {
+    it('issues an access token that expires after 15 minutes', async () => {
       const { token } = await createUser(app);
       const { iat, exp } = app.get(JwtService).decode(token);
-      expect(exp - iat).toBe(30 * 60);
+      expect(exp - iat).toBe(15 * 60);
     });
 
     it('rejects a locked account with 403', async () => {

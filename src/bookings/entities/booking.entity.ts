@@ -57,6 +57,7 @@ export class Booking {
   @Column({ name: 'reject_reason', type: 'text', nullable: true })
   rejectReason: string | null;
 
+  @Index()
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

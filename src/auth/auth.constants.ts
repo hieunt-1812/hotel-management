@@ -1,4 +1,4 @@
-export const DEFAULT_ACCESS_TOKEN_TTL_SECONDS = 30 * 60;
+export const DEFAULT_ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 export const DEFAULT_REFRESH_TOKEN_TTL_DAYS = 7;
 
 export const REFRESH_TOKEN_KEY_PREFIX = 'refresh_';

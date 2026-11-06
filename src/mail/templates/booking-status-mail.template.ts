@@ -1,7 +1,6 @@
 import { BookingStatusMailJob } from '../mail.constants';
 import { escapeHtml } from './escape-html.util';
-
-const formatVnd = (amount: number) => `${amount.toLocaleString('vi-VN')} VND`;
+import { formatVnd } from './format-vnd.util';
 
 export function buildBookingStatusMail(job: BookingStatusMailJob) {
   const approved = job.status === 'approved';

@@ -3,6 +3,7 @@ export const MAIL_QUEUE = 'mail';
 export const MAIL_JOBS = {
   ACTIVATION: 'activation',
   BOOKING_STATUS: 'booking-status',
+  MONTHLY_REVENUE: 'monthly-revenue',
 } as const;
 
 /** Retry failed sends 3 times (5s, 10s, 20s) and drop the job once delivered. */
@@ -28,4 +29,13 @@ export interface BookingStatusMailJob {
   totalPrice: number;
   status: 'approved' | 'rejected';
   rejectReason?: string | null;
+}
+
+export interface MonthlyRevenueMailJob {
+  to: string;
+  fullName: string;
+  month: string;
+  totalRevenue: number;
+  totalPayments: number;
+  byRoomType: { name: string; revenue: number; payments: number }[];
 }

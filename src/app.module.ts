@@ -16,6 +16,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { RedisModule } from './redis/redis.module';
+import { StatisticsModule } from './statistics/statistics.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { RedisModule } from './redis/redis.module';
     BookingsModule,
     PaymentsModule,
     ReviewsModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

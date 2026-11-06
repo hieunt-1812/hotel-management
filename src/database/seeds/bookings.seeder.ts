@@ -2,6 +2,11 @@ import { EntityManager } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Room } from '../../rooms/entities/room.entity';
 import { Booking, BookingStatus } from '../../bookings/entities/booking.entity';
+import {
+  Payment,
+  PaymentMethod,
+  PaymentStatus,
+} from '../../payments/entities/payment.entity';
 import { countNights } from '../../common/utils/stay-dates.util';
 
 const DEMO_GUEST_EMAIL = 'user@hotel.local';
@@ -21,14 +26,22 @@ export async function seedBookings(manager: EntityManager) {
 
   const checkIn = daysFromToday(-3);
   const checkOut = daysFromToday(-1);
-  await manager.insert(Booking, {
+  const totalPrice = room.pricePerNight * countNights(checkIn, checkOut);
+  const { identifiers } = await manager.insert(Booking, {
     user,
     room,
     checkIn,
     checkOut,
-    totalPrice: room.pricePerNight * countNights(checkIn, checkOut),
+    totalPrice,
     status: BookingStatus.APPROVED,
     note: 'Seed: kỳ nghỉ đã kết thúc, chờ hoàn tất',
+  });
+  await manager.insert(Payment, {
+    booking: { id: identifiers[0].id as string },
+    amount: totalPrice,
+    method: PaymentMethod.CASH,
+    status: PaymentStatus.PAID,
+    paidAt: () => 'now()',
   });
   return 1;
 }

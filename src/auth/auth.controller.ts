@@ -57,7 +57,7 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description:
-      'Đăng nhập thành công, trả về access token (30 phút) và refresh token (7 ngày).',
+      'Đăng nhập thành công, trả về access token (15 phút) và refresh token (7 ngày).',
   })
   @ApiResponse({ status: 401, description: 'Sai email hoặc mật khẩu.' })
   @ApiResponse({
