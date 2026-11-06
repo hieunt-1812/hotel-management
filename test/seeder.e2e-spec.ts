@@ -47,11 +47,17 @@ describe('Seeder (e2e)', () => {
     expect(room.amenities.length).toBeGreaterThan(0);
   });
 
-  it('seeds an approved booking whose stay is already over', async () => {
+  it('seeds an approved, paid booking whose stay is already over', async () => {
     const booking = await ds.getRepository(Booking).findOneOrFail({
       where: {},
-      relations: { user: true, room: true },
+      relations: { user: true, room: true, payments: true },
     });
+    expect(booking.payments).toEqual([
+      expect.objectContaining({
+        status: 'paid',
+        amount: booking.totalPrice,
+      }),
+    ]);
     expect(booking).toMatchObject({
       status: 'approved',
       user: { email: 'user@hotel.local' },

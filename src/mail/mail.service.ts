@@ -7,6 +7,7 @@ import {
   MAIL_JOB_OPTIONS,
   MAIL_JOBS,
   MAIL_QUEUE,
+  MonthlyRevenueMailJob,
 } from './mail.constants';
 
 /** Producer side: enqueues mail jobs so HTTP requests never wait on SMTP. */
@@ -20,5 +21,9 @@ export class MailService {
 
   async sendBookingStatusMail(data: BookingStatusMailJob): Promise<void> {
     await this.mailQueue.add(MAIL_JOBS.BOOKING_STATUS, data, MAIL_JOB_OPTIONS);
+  }
+
+  async sendMonthlyRevenueMail(data: MonthlyRevenueMailJob): Promise<void> {
+    await this.mailQueue.add(MAIL_JOBS.MONTHLY_REVENUE, data, MAIL_JOB_OPTIONS);
   }
 }

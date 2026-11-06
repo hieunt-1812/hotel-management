@@ -8,9 +8,11 @@ import {
   BookingStatusMailJob,
   MAIL_JOBS,
   MAIL_QUEUE,
+  MonthlyRevenueMailJob,
 } from './mail.constants';
 import { buildActivationMail } from './templates/activation-mail.template';
 import { buildBookingStatusMail } from './templates/booking-status-mail.template';
+import { buildMonthlyRevenueMail } from './templates/monthly-revenue-mail.template';
 
 /** Consumer side: delivers queued mails via Gmail SMTP (App Password). */
 @Processor(MAIL_QUEUE)
@@ -54,6 +56,15 @@ export class MailProcessor {
     await this.send(job.data.to, mail);
     if (!this.smtpEnabled) {
       this.logger.log(`Booking mail to ${job.data.to}: ${mail.subject}`);
+    }
+  }
+
+  @Process(MAIL_JOBS.MONTHLY_REVENUE)
+  async handleMonthlyRevenue(job: Job<MonthlyRevenueMailJob>) {
+    const mail = buildMonthlyRevenueMail(job.data);
+    await this.send(job.data.to, mail);
+    if (!this.smtpEnabled) {
+      this.logger.log(`Revenue mail to ${job.data.to}: ${mail.subject}`);
     }
   }
 
