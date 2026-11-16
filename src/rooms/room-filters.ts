@@ -2,7 +2,8 @@ import { BadRequestException } from '@nestjs/common';
 import { SelectQueryBuilder } from 'typeorm';
 import { Room } from './entities/room.entity';
 import { ROOM_BLOCKING_STATUSES } from '../bookings/booking.constants';
-import { RoomSort, SearchRoomsQueryDto } from './dto/search-rooms-query.dto';
+import { RoomFiltersQueryDto } from './dto/room-filters-query.dto';
+import { RoomSort } from './enums/room-sort.enum';
 import { assertValidStay } from '../common/utils/stay-dates.util';
 
 const SORT_COLUMNS: Record<RoomSort, [string, 'ASC' | 'DESC']> = {
@@ -12,7 +13,7 @@ const SORT_COLUMNS: Record<RoomSort, [string, 'ASC' | 'DESC']> = {
 };
 
 /** Cross-field checks that class-validator can't express on a single property. */
-export function validateRoomSearch(query: SearchRoomsQueryDto) {
+export function validateRoomSearch(query: RoomFiltersQueryDto) {
   const { checkIn, checkOut, minPrice, maxPrice } = query;
   if (!checkIn !== !checkOut) {
     throw new BadRequestException('Cần nhập cả checkIn và checkOut');
@@ -25,11 +26,11 @@ export function validateRoomSearch(query: SearchRoomsQueryDto) {
 
 /**
  * Adds the room search filters + sort to a query builder aliased `room`.
- * Shared by the room list and (later) the admin Excel export.
+ * Shared by the room lists and the admin Excel export.
  */
 export function applyRoomFilters(
   qb: SelectQueryBuilder<Room>,
-  query: SearchRoomsQueryDto,
+  query: RoomFiltersQueryDto,
 ): SelectQueryBuilder<Room> {
   const { checkIn, checkOut, amenities, bedType, view, capacity } = query;
   const { roomTypeId, minPrice, maxPrice, sort } = query;
