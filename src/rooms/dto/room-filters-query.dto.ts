@@ -15,12 +15,7 @@ import {
 } from 'class-validator';
 import { BedType, RoomView } from '../entities/room.entity';
 import { DATE_ONLY_REGEX } from '../../common/utils/stay-dates.util';
-
-export enum RoomSort {
-  NEWEST = 'newest',
-  PRICE_ASC = 'price_asc',
-  PRICE_DESC = 'price_desc',
-}
+import { RoomSort } from '../enums/room-sort.enum';
 
 export class RoomFiltersQueryDto {
   @ApiPropertyOptional({

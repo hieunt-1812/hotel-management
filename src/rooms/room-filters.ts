@@ -2,7 +2,8 @@ import { BadRequestException } from '@nestjs/common';
 import { SelectQueryBuilder } from 'typeorm';
 import { Room } from './entities/room.entity';
 import { ROOM_BLOCKING_STATUSES } from '../bookings/booking.constants';
-import { RoomFiltersQueryDto, RoomSort } from './dto/room-filters-query.dto';
+import { RoomFiltersQueryDto } from './dto/room-filters-query.dto';
+import { RoomSort } from './enums/room-sort.enum';
 import { assertValidStay } from '../common/utils/stay-dates.util';
 
 const SORT_COLUMNS: Record<RoomSort, [string, 'ASC' | 'DESC']> = {
