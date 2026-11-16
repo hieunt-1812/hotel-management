@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  StreamableFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -21,6 +22,7 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOperation,
+  ApiProduces,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -34,9 +36,12 @@ import {
 import { DeleteUploadsOnErrorInterceptor } from '../attachments/interceptors/delete-uploads-on-error.interceptor';
 import { AdminRoomsService } from './admin-rooms.service';
 import { AdminRoomImagesService } from './admin-room-images.service';
+import { AdminRoomsExportService } from './admin-rooms-export.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { SearchRoomsQueryDto } from './dto/search-rooms-query.dto';
+import { RoomFiltersQueryDto } from './dto/room-filters-query.dto';
+import { XLSX_MIME_TYPE } from './rooms-export.constants';
 
 const NOT_FOUND = { status: 404, description: 'Không tìm thấy phòng.' };
 
@@ -51,6 +56,7 @@ export class AdminRoomsController {
   constructor(
     private readonly adminRoomsService: AdminRoomsService,
     private readonly adminRoomImagesService: AdminRoomImagesService,
+    private readonly adminRoomsExportService: AdminRoomsExportService,
   ) {}
 
   @Post()
@@ -67,6 +73,22 @@ export class AdminRoomsController {
   @ApiOperation({ summary: 'Danh sách phòng (cùng bộ lọc với tìm kiếm phòng)' })
   findAll(@Query() query: SearchRoomsQueryDto) {
     return this.adminRoomsService.findAll(query);
+  }
+
+  @Get('export')
+  @ApiOperation({
+    summary: 'Xuất file Excel danh sách phòng (cùng bộ lọc với tìm kiếm phòng)',
+  })
+  @ApiProduces(XLSX_MIME_TYPE)
+  @ApiResponse({ status: 200, description: 'File .xlsx danh sách phòng.' })
+  @ApiResponse({ status: 400, description: 'Bộ lọc không hợp lệ.' })
+  async export(@Query() query: RoomFiltersQueryDto) {
+    const { fileName, content } =
+      await this.adminRoomsExportService.export(query);
+    return new StreamableFile(content, {
+      type: XLSX_MIME_TYPE,
+      disposition: `attachment; filename="${fileName}"`,
+    });
   }
 
   @Get(':id')

@@ -11,6 +11,7 @@ import { RoomCatalogController } from './room-catalog.controller';
 import { AdminRoomsController } from './admin-rooms.controller';
 import { AdminRoomsService } from './admin-rooms.service';
 import { AdminRoomImagesService } from './admin-room-images.service';
+import { AdminRoomsExportService } from './admin-rooms-export.service';
 
 @Module({
   imports: [
@@ -18,7 +19,12 @@ import { AdminRoomImagesService } from './admin-room-images.service';
     ReviewsModule,
   ],
   controllers: [RoomsController, RoomCatalogController, AdminRoomsController],
-  providers: [RoomsService, AdminRoomsService, AdminRoomImagesService],
+  providers: [
+    RoomsService,
+    AdminRoomsService,
+    AdminRoomImagesService,
+    AdminRoomsExportService,
+  ],
   exports: [TypeOrmModule],
 })
 export class RoomsModule {}
