@@ -6,6 +6,7 @@ import { BookingsController } from './bookings.controller';
 import { MeBookingsController } from './me-bookings.controller';
 import { AdminBookingsController } from './admin-bookings.controller';
 import { AdminBookingsService } from './admin-bookings.service';
+import { AdminBookingUpdateService } from './admin-booking-update.service';
 import { MailModule } from '../mail/mail.module';
 import { BookingCompletionService } from './booking-completion.service';
 import { BookingCompletionCron } from './booking-completion.cron';
@@ -20,6 +21,7 @@ import { BookingCompletionCron } from './booking-completion.cron';
   providers: [
     BookingsService,
     AdminBookingsService,
+    AdminBookingUpdateService,
     BookingCompletionService,
     BookingCompletionCron,
   ],

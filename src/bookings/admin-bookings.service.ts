@@ -42,7 +42,7 @@ export class AdminBookingsService {
   }
 
   async findOne(id: string) {
-    return serializeAdminBooking(await this.loadWithRelations(id));
+    return serializeAdminBooking(await this.findWithGuest(id));
   }
 
   approve(id: string) {
@@ -55,7 +55,7 @@ export class AdminBookingsService {
 
   async complete(id: string) {
     await this.completionService.completeOne(id);
-    return serializeAdminBooking(await this.loadWithRelations(id));
+    return serializeAdminBooking(await this.findWithGuest(id));
   }
 
   /** State machine: only pending → approved | rejected. Then notify the guest. */
@@ -80,7 +80,7 @@ export class AdminBookingsService {
       });
     });
 
-    const booking = await this.loadWithRelations(id);
+    const booking = await this.findWithGuest(id);
     await this.notifyGuest(booking);
     return serializeAdminBooking(booking);
   }
@@ -106,7 +106,7 @@ export class AdminBookingsService {
     }
   }
 
-  private async loadWithRelations(id: string) {
+  async findWithGuest(id: string) {
     const booking = await this.bookingsRepository
       .createQueryBuilder('booking')
       .leftJoinAndSelect('booking.room', 'room')
