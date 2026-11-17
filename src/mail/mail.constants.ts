@@ -3,6 +3,7 @@ export const MAIL_QUEUE = 'mail';
 export const MAIL_JOBS = {
   ACTIVATION: 'activation',
   BOOKING_STATUS: 'booking-status',
+  BOOKING_UPDATED: 'booking-updated',
   MONTHLY_REVENUE: 'monthly-revenue',
 } as const;
 
@@ -29,6 +30,21 @@ export interface BookingStatusMailJob {
   totalPrice: number;
   status: 'approved' | 'rejected';
   rejectReason?: string | null;
+}
+
+export interface BookingMailDetails {
+  roomName: string;
+  checkIn: string;
+  checkOut: string;
+  totalPrice: number;
+  note: string | null;
+}
+
+export interface BookingUpdatedMailJob {
+  to: string;
+  fullName: string;
+  previous: BookingMailDetails;
+  current: BookingMailDetails;
 }
 
 export interface MonthlyRevenueMailJob {

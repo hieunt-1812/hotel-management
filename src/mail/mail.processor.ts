@@ -6,12 +6,14 @@ import * as nodemailer from 'nodemailer';
 import {
   ActivationMailJob,
   BookingStatusMailJob,
+  BookingUpdatedMailJob,
   MAIL_JOBS,
   MAIL_QUEUE,
   MonthlyRevenueMailJob,
 } from './mail.constants';
 import { buildActivationMail } from './templates/activation-mail.template';
 import { buildBookingStatusMail } from './templates/booking-status-mail.template';
+import { buildBookingUpdatedMail } from './templates/booking-updated-mail.template';
 import { buildMonthlyRevenueMail } from './templates/monthly-revenue-mail.template';
 
 /** Consumer side: delivers queued mails via Gmail SMTP (App Password). */
@@ -56,6 +58,15 @@ export class MailProcessor {
     await this.send(job.data.to, mail);
     if (!this.smtpEnabled) {
       this.logger.log(`Booking mail to ${job.data.to}: ${mail.subject}`);
+    }
+  }
+
+  @Process(MAIL_JOBS.BOOKING_UPDATED)
+  async handleBookingUpdated(job: Job<BookingUpdatedMailJob>) {
+    const mail = buildBookingUpdatedMail(job.data);
+    await this.send(job.data.to, mail);
+    if (!this.smtpEnabled) {
+      this.logger.log(`Booking update mail to ${job.data.to}: ${mail.subject}`);
     }
   }
 

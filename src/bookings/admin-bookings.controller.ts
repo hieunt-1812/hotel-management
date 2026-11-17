@@ -21,6 +21,8 @@ import { UserRole } from '../users/entities/user.entity';
 import { AdminBookingsService } from './admin-bookings.service';
 import { AdminListBookingsQueryDto } from './dto/admin-list-bookings-query.dto';
 import { RejectBookingDto } from './dto/reject-booking.dto';
+import { UpdateBookingDto } from './dto/update-booking.dto';
+import { AdminBookingUpdateService } from './admin-booking-update.service';
 
 @ApiTags('Admin - Bookings')
 @ApiBearerAuth()
@@ -30,7 +32,10 @@ import { RejectBookingDto } from './dto/reject-booking.dto';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminBookingsController {
-  constructor(private readonly adminBookingsService: AdminBookingsService) {}
+  constructor(
+    private readonly adminBookingsService: AdminBookingsService,
+    private readonly adminBookingUpdateService: AdminBookingUpdateService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Danh sách booking (lọc, phân trang)' })
@@ -43,6 +48,28 @@ export class AdminBookingsController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy booking.' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminBookingsService.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({
+    summary:
+      'Sửa thông tin booking pending/approved: phòng, ngày ở, ghi chú (gửi mail cho khách)',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Body rỗng / ngày không hợp lệ.',
+  })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy booking / phòng.' })
+  @ApiResponse({
+    status: 409,
+    description:
+      'Booking không còn sửa được / phòng đã có người đặt / booking đã thanh toán.',
+  })
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateBookingDto,
+  ) {
+    return this.adminBookingUpdateService.update(id, dto);
   }
 
   @Patch(':id/approve')

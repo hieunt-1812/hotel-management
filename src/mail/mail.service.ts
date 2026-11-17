@@ -4,6 +4,7 @@ import type { Queue } from 'bull';
 import {
   ActivationMailJob,
   BookingStatusMailJob,
+  BookingUpdatedMailJob,
   MAIL_JOB_OPTIONS,
   MAIL_JOBS,
   MAIL_QUEUE,
@@ -21,6 +22,10 @@ export class MailService {
 
   async sendBookingStatusMail(data: BookingStatusMailJob): Promise<void> {
     await this.mailQueue.add(MAIL_JOBS.BOOKING_STATUS, data, MAIL_JOB_OPTIONS);
+  }
+
+  async sendBookingUpdatedMail(data: BookingUpdatedMailJob): Promise<void> {
+    await this.mailQueue.add(MAIL_JOBS.BOOKING_UPDATED, data, MAIL_JOB_OPTIONS);
   }
 
   async sendMonthlyRevenueMail(data: MonthlyRevenueMailJob): Promise<void> {

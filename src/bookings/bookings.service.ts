@@ -7,14 +7,18 @@ import {
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
-import { ROOM_BLOCKING_STATUSES } from './booking.constants';
+import { ROOM_TAKEN_MESSAGE } from './booking.constants';
+import {
+  calculateTotalPrice,
+  hasOverlappingBooking,
+} from './booking-stay.util';
 import { Room } from '../rooms/entities/room.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { MyBookingsQueryDto } from './dto/my-bookings-query.dto';
 import { serializeBooking } from './booking.serializer';
 import { buildBookingListQuery } from './booking-list-query';
 import { toPaginatedResult } from '../common/utils/paginate.util';
-import { assertValidStay, countNights } from '../common/utils/stay-dates.util';
+import { assertValidStay } from '../common/utils/stay-dates.util';
 
 @Injectable()
 export class BookingsService {
@@ -37,24 +41,15 @@ export class BookingsService {
       });
       if (!room) throw new NotFoundException('Không tìm thấy phòng');
 
-      const overlapping = await manager
-        .createQueryBuilder(Booking, 'booking')
-        .where('booking.room_id = :roomId', { roomId })
-        .andWhere('booking.status IN (:...statuses)', {
-          statuses: ROOM_BLOCKING_STATUSES,
-        })
-        .andWhere('booking.checkIn < :checkOut', { checkOut })
-        .andWhere('booking.checkOut > :checkIn', { checkIn })
-        .getExists();
-      if (overlapping) {
-        throw new ConflictException(
-          'Phòng đã có người đặt trong khoảng ngày này',
-        );
+      if (await hasOverlappingBooking(manager, { roomId, checkIn, checkOut })) {
+        throw new ConflictException(ROOM_TAKEN_MESSAGE);
       }
 
-      // Price snapshot: computed on the server from the current room price
-      const nights = countNights(checkIn, checkOut);
-      const totalPrice = Math.round(room.pricePerNight * nights * 100) / 100;
+      const totalPrice = calculateTotalPrice(
+        room.pricePerNight,
+        checkIn,
+        checkOut,
+      );
 
       const saved = await manager.save(
         manager.create(Booking, {
